@@ -42,7 +42,8 @@ public class Startup {
                 Vertx vertx = vertxAsyncResult.result();
                 this.vertx = vertx;
                 DeploymentOptions deploymentOptions = new DeploymentOptions();
-                deploymentOptions.setInstances(10);
+                deploymentOptions.setWorker(true);
+                deploymentOptions.setInstances(300);
 
                 vertx.deployVerticle(WorkerVerticle.class, deploymentOptions, result -> {
                     if(result.succeeded()){
