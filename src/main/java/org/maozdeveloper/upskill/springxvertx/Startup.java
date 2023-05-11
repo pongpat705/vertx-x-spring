@@ -20,6 +20,22 @@ public class Startup {
 
     private Vertx vertx;
 
+    public void init2(){
+
+        Vertx vertx = Vertx.vertx();
+        this.vertx = vertx;
+        DeploymentOptions deploymentOptions = new DeploymentOptions();
+        deploymentOptions.setWorker(true);
+        deploymentOptions.setInstances(300);
+
+        vertx.deployVerticle(WorkerVerticle.class, deploymentOptions, result -> {
+            if(result.succeeded()){
+                log.info("deploy "+WorkerVerticle.class.getName()+" succeed");
+            } else {
+                log.info("deploy "+WorkerVerticle.class.getName()+" failed {}", result.cause().getMessage());
+            }
+        });
+    }
     @PostConstruct
     public void init(){
 

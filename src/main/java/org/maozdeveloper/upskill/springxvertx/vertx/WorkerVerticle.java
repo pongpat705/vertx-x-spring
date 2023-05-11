@@ -38,13 +38,17 @@ public class WorkerVerticle extends AbstractVerticle {
         vertx.eventBus().consumer("delete.file", message -> {
             String gotMessage = (String) message.body();
             TempFileModel tempFileModel = Json.decodeValue(gotMessage, TempFileModel.class);
-            vertx.fileSystem().delete(tempFileModel.getFile(), voidAsyncResult -> {
-                if(voidAsyncResult.succeeded()){
-                    log.info("deleted");
-                } else {
-                    log.info("delete error");
-                }
+
+            vertx.setTimer(2000, aLong -> {
+                vertx.fileSystem().delete(tempFileModel.getFile(), voidAsyncResult -> {
+                    if(voidAsyncResult.succeeded()){
+                        log.info("deleted");
+                    } else {
+                        log.info("delete error");
+                    }
+                });
             });
+
         });
         vertx.eventBus().consumer("send.mail", message -> {
             String gotMessage = (String) message.body();

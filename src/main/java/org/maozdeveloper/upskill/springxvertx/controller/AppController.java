@@ -43,5 +43,11 @@ public class AppController {
         return this.appService.sendMail(param);
     }
 
+    @PostMapping("/api/sendmail/sync")
+    public String sendmailSync(@ModelAttribute UploadFileModel param) throws ExecutionException, InterruptedException {
+
+        return this.appService.sendMailSync(param);
+    }
+
 
 }
