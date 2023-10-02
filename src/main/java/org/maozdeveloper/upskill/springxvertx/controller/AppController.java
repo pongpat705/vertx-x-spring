@@ -38,16 +38,26 @@ public class AppController {
         return this.appService.testApiAskReply(param);
     }
     @PostMapping("/api/sendmail")
-    public String sendmail(@ModelAttribute UploadFileModel param) throws ExecutionException, InterruptedException {
-
+    public String sendmail(@ModelAttribute UploadFileModel param) {
         return this.appService.sendMail(param);
     }
 
     @PostMapping("/api/sendmail/sync")
-    public String sendmailSync(@ModelAttribute UploadFileModel param) throws ExecutionException, InterruptedException {
-
+    public String sendmailSync(@ModelAttribute UploadFileModel param) {
         return this.appService.sendMailSync(param);
     }
+
+    @PostMapping("/api/combine/async")
+    public Map<String, String> pocCombineAsync(@RequestBody String param) throws ExecutionException, InterruptedException {
+        return this.appService.testCombineAsync(param);
+    }
+
+    @PostMapping("/api/combine/sync")
+    public Map<String, String> pocCombineSync(@RequestBody String param) throws ExecutionException, InterruptedException {
+        return this.appService.testCombineSync(param);
+    }
+
+
 
 
 }

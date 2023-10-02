@@ -7,15 +7,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.maozdeveloper.upskill.springxvertx.Startup;
 import org.maozdeveloper.upskill.springxvertx.model.TempFileModel;
 import org.maozdeveloper.upskill.springxvertx.model.UploadFileModel;
-import org.maozdeveloper.upskill.springxvertx.vertx.WorkerVerticle;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
-import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.io.*;
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -82,7 +82,6 @@ public class AppService {
             helper.addAttachment(param.getFile().getOriginalFilename(), fileSystemResource);
             javaMailSender.send(minemessage);
             file.delete();
-            Thread.sleep(2000);
         } catch (Exception e){
             result = e.getMessage();
         }
@@ -114,5 +113,67 @@ public class AppService {
         }
 
         return result;
+    }
+
+    public Map<String, String> testCombineAsync(String param) throws ExecutionException, InterruptedException {
+        RestTemplate restTemplate = new RestTemplate();
+
+        log.info("testCombineAsync start");
+
+        CompletableFuture<String> sscoCompletableFuture = CompletableFuture.supplyAsync(() -> {
+            String sscoResult = restTemplate.postForObject("http://localhost:9091/ssco/verify", param, String.class);
+            return sscoResult;
+        });
+        CompletableFuture<String> rmCompletableFuture = CompletableFuture.supplyAsync(() -> {
+            String rmResult = restTemplate.postForObject("http://localhost:9091/customer/rm/relation", param, String.class);
+            return rmResult;
+        });
+        CompletableFuture<String> cisCompletableFuture = CompletableFuture.supplyAsync(() -> {
+            String cisResult = restTemplate.postForObject("http://localhost:9091/customer/rm/cis-demographic/cis", param, String.class);
+            return cisResult;
+        });
+
+
+        Map<String, String> x = CompletableFuture.allOf(sscoCompletableFuture, rmCompletableFuture, cisCompletableFuture)
+                .thenApply(unused -> {
+                    String sscoResult = sscoCompletableFuture.join();
+                    String rmResult = rmCompletableFuture.join();
+                    String cisResult = cisCompletableFuture.join();
+
+                    Map<String, String> result = new HashMap<>();
+                    result.put("ssco", sscoResult);
+                    result.put("rm", rmResult);
+                    result.put("cis", cisResult);
+                    return result;
+                })
+                .exceptionally(throwable -> {
+                    log.error(throwable.getMessage());
+                    Map<String, String> result = new HashMap<>();
+                    result.put("error", throwable.getMessage());
+                    return result;
+                })
+                .get();
+
+        log.info("testCombineAsync end");
+
+        return x;
+    }
+
+    public Map<String, String> testCombineSync(String param) {
+        Map<String, String> result = new HashMap<>();
+        RestTemplate restTemplate = new RestTemplate();
+
+        log.info("testCombineSync start");
+        String sscoResult = restTemplate.postForObject("http://localhost:9091/ssco/verify", param, String.class);
+        String rmResult = restTemplate.postForObject("http://localhost:9091/customer/rm/relation", param, String.class);
+        String cisResult = restTemplate.postForObject("http://localhost:9091/customer/rm/cis-demographic/cis", param, String.class);
+
+        log.info("testCombineSync end");
+        result.put("ssco", sscoResult);
+        result.put("rm", rmResult);
+        result.put("cis", cisResult);
+
+        return result;
+
     }
 }
